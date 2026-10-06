@@ -1,4 +1,8 @@
-# 🇱🇰 DisaLink AI
+# DisaLink AI
+
+<p align="center">
+  <img src="logo.png" width="120" alt="DisaLink AI Logo">
+</p>
 
 ### Offline-First, Trilingual Disaster Intelligence & Triage Platform for Sri Lanka
 
