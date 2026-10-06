@@ -1,0 +1,156 @@
+{
+  "entities": {
+    "CoordinatorRecord": {
+      "title": "CoordinatorRecord",
+      "description": "Cloud-persisted disaster triage case snapshot, field report, or situation note saved by an authenticated DS coordinator.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "recordType": {
+          "type": "string",
+          "description": "Type of synced record",
+          "enum": ["case_snapshot", "field_report", "situation_summary", "grounding_brief"]
+        },
+        "targetId": {
+          "type": "string",
+          "description": "Local Case ID or Report ID (e.g. C-001, R-001)",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Place or headline title",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "summaryText": {
+          "type": "string",
+          "description": "Detailed triage summary or note text",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "urgency": {
+          "type": "integer",
+          "description": "Urgency score from 1 to 5"
+        },
+        "status": {
+          "type": "string",
+          "description": "Record lifecycle status",
+          "enum": ["active", "verified", "archived"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update"
+        }
+      },
+      "required": [
+        "uid",
+        "recordType",
+        "targetId",
+        "title",
+        "summaryText",
+        "urgency",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CoordinatorProfile": {
+      "title": "CoordinatorProfile",
+      "description": "Registered Divisional Secretariat or Grama Niladhari disaster relief officer profile.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Full official name of the officer",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "description": "Official designation in the disaster response hierarchy",
+          "enum": ["DS Coordinator", "GN Officer", "DMC Liaison", "Field Relief Officer"]
+        },
+        "division": {
+          "type": "string",
+          "description": "Assigned Divisional Secretariat division",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "district": {
+          "type": "string",
+          "description": "Assigned administrative district",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "badgeNumber": {
+          "type": "string",
+          "description": "Official DMC / DS Officer service badge ID",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "dutyStatus": {
+          "type": "string",
+          "description": "Current operational shift status",
+          "enum": ["on_duty", "standby", "off_duty"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of registration"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last profile update"
+        }
+      },
+      "required": [
+        "uid",
+        "fullName",
+        "role",
+        "division",
+        "district",
+        "badgeNumber",
+        "dutyStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/coordinator_records/{recordId}": {
+      "schema": {
+        "$ref": "#/entities/CoordinatorRecord"
+      },
+      "description": "Private cloud-synced disaster triage records owned by each authenticated Divisional Secretariat coordinator."
+    },
+    "/coordinator_profiles/{profileId}": {
+      "schema": {
+        "$ref": "#/entities/CoordinatorProfile"
+      },
+      "description": "Registered officer profile document strictly isolated to the owning authenticated coordinator."
+    }
+  }
+}

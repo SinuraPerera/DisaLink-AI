@@ -1,0 +1,208 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidCoordinatorRecord(data) {
+      return data.keys().hasAll([
+          'uid',
+          'recordType',
+          'targetId',
+          'title',
+          'summaryText',
+          'urgency',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'recordType',
+          'targetId',
+          'title',
+          'summaryText',
+          'urgency',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.uid == request.auth.uid
+        && data.recordType is string
+        && data.recordType.size() <= 32
+        && data.recordType in ['case_snapshot', 'field_report', 'situation_summary', 'grounding_brief']
+        && data.targetId is string
+        && data.targetId.size() >= 1
+        && data.targetId.size() <= 64
+        && data.targetId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 200
+        && data.summaryText is string
+        && data.summaryText.size() >= 1
+        && data.summaryText.size() <= 4000
+        && data.urgency is int
+        && data.urgency >= 1
+        && data.urgency <= 5
+        && data.status is string
+        && data.status.size() <= 32
+        && data.status in ['active', 'verified', 'archived']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCoordinatorProfile(data) {
+      return data.keys().hasAll([
+          'uid',
+          'fullName',
+          'role',
+          'division',
+          'district',
+          'badgeNumber',
+          'dutyStatus',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'fullName',
+          'role',
+          'division',
+          'district',
+          'badgeNumber',
+          'dutyStatus',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid.size() >= 1
+        && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.uid == request.auth.uid
+        && data.fullName is string
+        && data.fullName.size() >= 1
+        && data.fullName.size() <= 120
+        && data.role is string
+        && data.role.size() <= 40
+        && data.role in ['DS Coordinator', 'GN Officer', 'DMC Liaison', 'Field Relief Officer']
+        && data.division is string
+        && data.division.size() >= 1
+        && data.division.size() <= 80
+        && data.district is string
+        && data.district.size() >= 1
+        && data.district.size() <= 60
+        && data.badgeNumber is string
+        && data.badgeNumber.size() >= 1
+        && data.badgeNumber.size() <= 40
+        && data.badgeNumber.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.dutyStatus is string
+        && data.dutyStatus.size() <= 32
+        && data.dutyStatus in ['on_duty', 'standby', 'off_duty']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /coordinator_records/{recordId} {
+      allow get: if isSignedIn()
+        && isValidId(recordId)
+        && existing().uid == request.auth.uid;
+
+      allow list: if isSignedIn()
+        && existing().uid == request.auth.uid;
+
+      allow create: if isVerifiedUser()
+        && isValidId(recordId)
+        && isValidCoordinatorRecord(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && incoming().status in ['active', 'verified'];
+
+      allow update: if isVerifiedUser()
+        && isValidId(recordId)
+        && isValidCoordinatorRecord(incoming())
+        && existing().uid == request.auth.uid
+        && existing().status != 'archived'
+        && incoming().uid == existing().uid
+        && incoming().recordType == existing().recordType
+        && incoming().targetId == existing().targetId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'summaryText', 'urgency', 'status', 'updatedAt'])
+        );
+
+      allow delete: if isVerifiedUser()
+        && isValidId(recordId)
+        && existing().uid == request.auth.uid;
+    }
+
+    match /coordinator_profiles/{profileId} {
+      allow get: if isSignedIn()
+        && isValidId(profileId)
+        && profileId == request.auth.uid
+        && (resource == null || existing().uid == request.auth.uid);
+
+      allow list: if isSignedIn()
+        && existing().uid == request.auth.uid;
+
+      allow create: if isVerifiedUser()
+        && isValidId(profileId)
+        && profileId == request.auth.uid
+        && isValidCoordinatorProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser()
+        && isValidId(profileId)
+        && profileId == request.auth.uid
+        && isValidCoordinatorProfile(incoming())
+        && existing().uid == request.auth.uid
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'fullName',
+            'role',
+            'division',
+            'district',
+            'badgeNumber',
+            'dutyStatus',
+            'updatedAt'
+          ])
+        );
+
+      allow delete: if isVerifiedUser()
+        && isValidId(profileId)
+        && profileId == request.auth.uid
+        && existing().uid == request.auth.uid;
+    }
+  }
+}

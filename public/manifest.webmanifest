@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "DisaLink AI — Disaster Triage Dashboard",
+  "short_name": "DisaLink",
+  "description": "Hear every village, even the silent ones. Multilingual offline-first disaster intelligence and triage layer for Sri Lanka.",
+  "theme_color": "#0B2A6F",
+  "background_color": "#FFFFFF",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

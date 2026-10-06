@@ -1,0 +1,6 @@
+{
+  "name": "DisaLink AI",
+  "description": "Hear every village, even the silent ones. A multilingual, offline-first disaster intelligence and triage dashboard for Divisional Secretariat disaster coordinators in Sri Lanka.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
